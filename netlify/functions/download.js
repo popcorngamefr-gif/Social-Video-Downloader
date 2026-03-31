@@ -23,7 +23,9 @@ exports.handler = async (event) => {
   if (url.includes('tiktok.com') || url.includes('vm.tiktok')) platform = 'tiktok';
   else if (url.includes('instagram.com')) platform = 'instagram';
   else if (url.includes('youtube.com') || url.includes('youtu.be')) platform = 'youtube';
-  else return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'Plateforme non supportée. TikTok, Instagram ou YouTube uniquement.' }) };
+  else if (url.includes('facebook.com') || url.includes('fb.watch')) platform = 'facebook';
+  else if (url.includes('twitter.com') || url.includes('x.com')) platform = 'twitter';
+  else return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'Plateforme non supportée. TikTok, Instagram, YouTube, Facebook ou X/Twitter uniquement.' }) };
 
   try {
     let result;
@@ -62,7 +64,7 @@ exports.handler = async (event) => {
       };
     }
 
-    else {
+    else if (platform === 'youtube') {
       const res = await fetch(`https://youtube-video-and-shorts-downloader.p.rapidapi.com/download?url=${encodeURIComponent(url)}`, {
         headers: { 'X-RapidAPI-Key': API_KEY, 'X-RapidAPI-Host': 'youtube-video-and-shorts-downloader.p.rapidapi.com' }
       });
@@ -77,6 +79,46 @@ exports.handler = async (event) => {
           label: `📹 ${f.format_note || f.quality || 'Vidéo'}`,
           url: f.url,
           quality: (f.format_note || '') + ' · MP4',
+        })),
+      };
+    }
+
+    else if (platform === 'facebook') {
+      const res = await fetch(`https://facebook-reel-and-video-downloader.p.rapidapi.com/?url=${encodeURIComponent(url)}`, {
+        headers: { 'X-RapidAPI-Key': API_KEY, 'X-RapidAPI-Host': 'facebook-reel-and-video-downloader.p.rapidapi.com' }
+      });
+      const d = await res.json();
+      const linksData = d?.links || d?.data || {};
+      const hd = linksData?.['Download High Quality'] || linksData?.hd;
+      const sd = linksData?.['Download Low Quality'] || linksData?.sd;
+      if (!hd && !sd) throw new Error('Impossible de récupérer la vidéo Facebook');
+      result = {
+        title: d?.title || 'Vidéo Facebook',
+        author: '',
+        thumb: d?.thumbnail || null,
+        links: [
+          hd && { label: '📹 Vidéo HD', url: hd, quality: 'HD · MP4' },
+          sd && { label: '📹 Vidéo SD', url: sd, quality: 'SD · MP4' },
+        ].filter(Boolean),
+      };
+    }
+
+    else {
+      const res = await fetch(`https://twitter-api45.p.rapidapi.com/twvideo?id=${encodeURIComponent(url)}`, {
+        headers: { 'X-RapidAPI-Key': API_KEY, 'X-RapidAPI-Host': 'twitter-api45.p.rapidapi.com' }
+      });
+      const d = await res.json();
+      const medias = Array.isArray(d?.media) ? d.media : [];
+      const videos = medias.filter(m => m.url);
+      if (!videos.length) throw new Error('Impossible de récupérer la vidéo X/Twitter');
+      result = {
+        title: d?.text?.slice(0, 80) || 'Vidéo X/Twitter',
+        author: d?.user?.screen_name ? '@' + d.user.screen_name : '',
+        thumb: videos[0]?.preview_image_url || null,
+        links: videos.slice(0, 3).map((v, i) => ({
+          label: `📹 Vidéo ${i + 1}`,
+          url: v.url,
+          quality: v?.quality || 'MP4',
         })),
       };
     }
