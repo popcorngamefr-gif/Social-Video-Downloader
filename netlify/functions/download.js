@@ -80,6 +80,18 @@ exports.handler = async (event) => {
     return shortcodeMatch[1];
   };
 
+
+  const extractYoutubeIdFromUrl = (rawUrl) => {
+    const u = String(rawUrl);
+
+    const directIdMatch = u.match(/(?:v=|youtu\.be\/|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/i);
+    if (directIdMatch) return directIdMatch[1];
+
+    const plainIdMatch = u.match(/\b([A-Za-z0-9_-]{10,})\b/);
+    if (plainIdMatch) return plainIdMatch[1];
+
+    return null;
+  };
   try {
     let result;
 
@@ -159,46 +171,81 @@ exports.handler = async (event) => {
       );
     } else {
       const encodedUrl = encodeURIComponent(url);
+      const youtubeId = extractYoutubeIdFromUrl(url);
 
       const youtubeCandidates = [
         {
+          host: 'youtube-video-fast-downloader-24-7.p.rapidapi.com',
+          endpoint: youtubeId ? `/download_video/${encodeURIComponent(youtubeId)}?quality=247` : '',
+          enabled: Boolean(youtubeId),
+        },
+        {
+          host: 'ytstream-download-youtube-videos.p.rapidapi.com',
+          endpoint: youtubeId ? `/dl?id=${encodeURIComponent(youtubeId)}` : '',
+          enabled: Boolean(youtubeId),
+        },
+        {
           host: 'youtube-video-and-shorts-downloader1.p.rapidapi.com',
           endpoint: `/youtube/download?url=${encodedUrl}`,
+          enabled: true,
         },
         {
           host: 'youtube-video-and-shorts-downloader1.p.rapidapi.com',
           endpoint: `/youtube/links?url=${encodedUrl}`,
+          enabled: true,
         },
         {
           host: 'youtube-video-and-shorts-downloader.p.rapidapi.com',
           endpoint: `/download?url=${encodedUrl}`,
+          enabled: true,
         },
-      ];
+      ].filter((candidate) => candidate.enabled && candidate.endpoint);
 
       result = await runFallbacks(
         youtubeCandidates,
         (data) => {
-          const formats = Array.isArray(data?.formats)
-            ? data.formats
-            : Array.isArray(data?.links)
-              ? data.links
-              : [];
+          const formatItems = [];
+          if (Array.isArray(data?.formats)) formatItems.push(...data.formats);
+          if (Array.isArray(data?.links)) formatItems.push(...data.links);
+          if (Array.isArray(data?.data)) formatItems.push(...data.data);
 
-          const downloadable = formats
-            .filter((item) => item?.url)
-            .map((item) => ({
-              label: `📹 ${item?.format_note || item?.quality || item?.label || 'Vidéo'}`,
-              url: item.url,
-              quality: `${item?.format_note || item?.quality || 'MP4'} · ${item?.ext?.toUpperCase() || 'MP4'}`,
-            }));
+          const directUrls = [
+            data?.url,
+            data?.download_url,
+            data?.downloadUrl,
+            data?.result?.url,
+            data?.result?.download_url,
+            data?.result?.downloadUrl,
+            data?.video_url,
+            data?.videoUrl,
+          ].filter(Boolean);
 
-          if (!downloadable.length) return null;
+          const downloadable = [
+            ...formatItems
+              .filter((item) => item?.url)
+              .map((item) => ({
+                label: `📹 ${item?.format_note || item?.quality || item?.label || 'Vidéo'}`,
+                url: item.url,
+                quality: `${item?.format_note || item?.quality || 'MP4'} · ${item?.ext?.toUpperCase() || 'MP4'}`,
+              })),
+            ...directUrls.map((link, idx) => ({
+              label: `📹 Vidéo ${idx + 1}`,
+              url: link,
+              quality: 'MP4',
+            })),
+          ];
+
+          const deduped = uniqueNonEmpty(downloadable.map((item) => item.url)).map((urlItem) =>
+            downloadable.find((item) => item.url === urlItem),
+          );
+
+          if (!deduped.length) return null;
 
           return {
             title: data?.title || 'Vidéo YouTube',
             author: data?.channel || data?.author || '',
             thumb: data?.thumbnail || data?.thumb || null,
-            links: downloadable.slice(0, 5),
+            links: deduped.slice(0, 5),
           };
         },
         'Impossible de récupérer des liens de téléchargement YouTube',
