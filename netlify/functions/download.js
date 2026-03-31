@@ -1,112 +1,93 @@
-const COBALT_API = 'https://api.cobalt.tools';
-
-function detectPlatform(url) {
-  if (url.includes('tiktok.com') || url.includes('vm.tiktok')) return 'tiktok';
-  if (url.includes('instagram.com')) return 'instagram';
-  if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
-  return null;
-}
-
-function getPlatformTitle(platform) {
-  return { tiktok: 'Vidéo TikTok', instagram: 'Post Instagram', youtube: 'Vidéo YouTube' }[platform] || 'Vidéo';
-}
-
 exports.handler = async (event) => {
-  const corsHeaders = {
+  const cors = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
   };
 
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers: corsHeaders, body: '' };
-  }
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: cors, body: '' };
+  if (event.httpMethod !== 'POST') return { statusCode: 405, headers: cors, body: JSON.stringify({ error: 'Method not allowed' }) };
 
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, headers: corsHeaders, body: JSON.stringify({ error: 'Method not allowed' }) };
-  }
+  const API_KEY = process.env.RAPIDAPI_KEY;
+  if (!API_KEY) return { statusCode: 500, headers: cors, body: JSON.stringify({ error: 'Clé API manquante côté serveur' }) };
 
   let body;
-  try {
-    body = JSON.parse(event.body);
-  } catch {
-    return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Invalid JSON' }) };
-  }
+  try { body = JSON.parse(event.body); }
+  catch { return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'JSON invalide' }) }; }
 
   const { url } = body;
-  if (!url) {
-    return { statusCode: 400, headers: corsHeaders, body: JSON.stringify({ error: 'Missing URL' }) };
-  }
+  if (!url) return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'URL manquante' }) };
 
-  const platform = detectPlatform(url);
-  if (!platform) {
-    return {
-      statusCode: 400,
-      headers: corsHeaders,
-      body: JSON.stringify({ error: 'Lien non reconnu. TikTok, Instagram et YouTube uniquement.' }),
-    };
-  }
+  // Détection plateforme
+  let platform;
+  if (url.includes('tiktok.com') || url.includes('vm.tiktok')) platform = 'tiktok';
+  else if (url.includes('instagram.com')) platform = 'instagram';
+  else if (url.includes('youtube.com') || url.includes('youtu.be')) platform = 'youtube';
+  else return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'Plateforme non supportée. TikTok, Instagram ou YouTube uniquement.' }) };
 
   try {
-    const cobaltRes = await fetch(COBALT_API, {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (compatible; VidDrop/1.0)',
-      },
-      body: JSON.stringify({
-        url,
-        videoQuality: '1080',
-        audioFormat: 'mp3',
-        filenameStyle: 'pretty',
-        downloadMode: 'auto',
-        tiktokFullAudio: true,
-        removeTikTokWatermark: true,
-      }),
-    });
+    let result;
 
-    const data = await cobaltRes.json();
-
-    if (!cobaltRes.ok || data.status === 'error') {
-      throw new Error(data?.error?.code || 'Erreur API cobalt');
+    if (platform === 'tiktok') {
+      const res = await fetch(`https://tiktok-video-no-watermark2.p.rapidapi.com/?url=${encodeURIComponent(url)}&hd=1`, {
+        headers: { 'X-RapidAPI-Key': API_KEY, 'X-RapidAPI-Host': 'tiktok-video-no-watermark2.p.rapidapi.com' }
+      });
+      const d = await res.json();
+      if (!d || d.code !== 0) throw new Error(d?.msg || 'Erreur TikTok');
+      const v = d.data;
+      result = {
+        title: v.title || 'Vidéo TikTok',
+        author: v.author?.unique_id ? '@' + v.author.unique_id : '',
+        thumb: v.cover || null,
+        links: [
+          v.hdplay && { label: '📹 Vidéo HD (sans filigrane)', url: v.hdplay, quality: 'HD · MP4' },
+          v.play   && { label: '📹 Vidéo SD', url: v.play, quality: 'SD · MP4' },
+          v.music  && { label: '🎵 Musique', url: v.music, quality: 'MP3' },
+        ].filter(Boolean),
+      };
     }
 
-    let result = {};
-
-    if (data.status === 'stream' || data.status === 'redirect' || data.status === 'tunnel') {
+    else if (platform === 'instagram') {
+      const res = await fetch(`https://instagram-downloader-download-instagram-videos-stories.p.rapidapi.com/index?url=${encodeURIComponent(url)}`, {
+        headers: { 'X-RapidAPI-Key': API_KEY, 'X-RapidAPI-Host': 'instagram-downloader-download-instagram-videos-stories.p.rapidapi.com' }
+      });
+      const d = await res.json();
+      const videoUrl = d.url || (Array.isArray(d.media) ? d.media[0] : d.media);
+      if (!videoUrl) throw new Error('Impossible de récupérer la vidéo Instagram');
       result = {
-        platform,
-        title: data.filename || getPlatformTitle(platform),
-        thumb: null,
-        links: [{ label: '📥 Vidéo sans filigrane', url: data.url, quality: 'HD · MP4' }],
+        title: 'Reel Instagram',
+        author: d.username ? '@' + d.username : '',
+        thumb: d.thumbnail || null,
+        links: [{ label: '📹 Vidéo sans filigrane', url: videoUrl, quality: 'MP4' }],
       };
-    } else if (data.status === 'picker') {
+    }
+
+    else {
+      const res = await fetch(`https://youtube-video-and-shorts-downloader.p.rapidapi.com/download?url=${encodeURIComponent(url)}`, {
+        headers: { 'X-RapidAPI-Key': API_KEY, 'X-RapidAPI-Host': 'youtube-video-and-shorts-downloader.p.rapidapi.com' }
+      });
+      const d = await res.json();
+      if (!d || !d.formats) throw new Error('Impossible de récupérer la vidéo YouTube');
+      const fmts = d.formats.filter(f => f.url && f.ext === 'mp4').slice(0, 3);
       result = {
-        platform,
-        title: getPlatformTitle(platform),
-        thumb: data.picker[0]?.thumb || null,
-        links: data.picker.map((item, i) => ({
-          label: item.type === 'video' ? `📹 Vidéo ${i + 1}` : `🖼 Image ${i + 1}`,
-          url: item.url,
-          quality: item.type === 'video' ? 'MP4' : 'JPG',
+        title: d.title || 'Vidéo YouTube',
+        author: d.channel || '',
+        thumb: d.thumbnail || null,
+        links: fmts.map(f => ({
+          label: `📹 ${f.format_note || f.quality || 'Vidéo'}`,
+          url: f.url,
+          quality: (f.format_note || '') + ' · MP4',
         })),
       };
-    } else {
-      throw new Error('Réponse inattendue');
     }
 
     return {
       statusCode: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: { ...cors, 'Content-Type': 'application/json' },
       body: JSON.stringify(result),
     };
 
   } catch (err) {
-    return {
-      statusCode: 500,
-      headers: corsHeaders,
-      body: JSON.stringify({ error: err.message || 'Erreur inconnue' }),
-    };
+    return { statusCode: 500, headers: cors, body: JSON.stringify({ error: err.message || 'Erreur inconnue' }) };
   }
 };
