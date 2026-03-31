@@ -64,6 +64,12 @@ exports.handler = async (event) => {
     return null;
   };
 
+  const extractTikTokId = (inputUrl) => {
+    const match = inputUrl.match(/\/video\/(\d+)/i);
+    if (match?.[1]) return match[1];
+    return null;
+  };
+
   const extractLinksFromPayload = (data, platformName) => {
     const links = [];
 
@@ -72,6 +78,28 @@ exports.handler = async (event) => {
       if (typeof data?.play === 'string') links.push({ url: data.play, quality: 'SD' });
       if (typeof data?.music === 'string') links.push({ url: data.music, quality: 'AUDIO' });
       if (typeof data?.wmplay === 'string') links.push({ url: data.wmplay, quality: 'WM' });
+      if (typeof data?.data?.hdplay === 'string') links.push({ url: data.data.hdplay, quality: 'HD' });
+      if (typeof data?.data?.play === 'string') links.push({ url: data.data.play, quality: 'SD' });
+      if (typeof data?.data?.wmplay === 'string') links.push({ url: data.data.wmplay, quality: 'WM' });
+      if (typeof data?.data?.music === 'string') links.push({ url: data.data.music, quality: 'AUDIO' });
+      if (typeof data?.download_url === 'string') links.push({ url: data.download_url, quality: 'MP4' });
+      if (typeof data?.video_url === 'string') links.push({ url: data.video_url, quality: 'MP4' });
+      if (typeof data?.data?.download_url === 'string') links.push({ url: data.data.download_url, quality: 'MP4' });
+      if (typeof data?.data?.video_url === 'string') links.push({ url: data.data.video_url, quality: 'MP4' });
+
+      if (Array.isArray(data?.data?.play_list)) {
+        for (const item of data.data.play_list) {
+          if (typeof item?.url === 'string') links.push({ url: item.url, quality: item?.quality || 'MP4' });
+        }
+      }
+
+      if (Array.isArray(data?.links)) {
+        for (const item of data.links) {
+          if (typeof item === 'string') links.push({ url: item, quality: 'MP4' });
+          if (typeof item?.url === 'string') links.push({ url: item.url, quality: item?.quality || 'MP4' });
+        }
+      }
+
       return links;
     }
 
@@ -139,10 +167,28 @@ exports.handler = async (event) => {
 
     if (platform === 'tiktok') {
       const encoded = encodeURIComponent(url);
-      const data = await rapidApiGet({
-        host: 'tiktok-video-no-watermark2.p.rapidapi.com',
-        endpoint: `/?url=${encoded}&hd=1`,
-      });
+      const videoId = extractTikTokId(url);
+      const candidates = [
+        { host: 'tiktok-video-no-watermark2.p.rapidapi.com', endpoint: `/?url=${encoded}&hd=1` },
+        ...(videoId ? [{ host: 'tiktok-api6.p.rapidapi.com', endpoint: `/video/details?video_id=${videoId}` }] : []),
+        ...(videoId ? [{ host: 'tiktok-data-api2.p.rapidapi.com', endpoint: `/shop/detail-product?product_id=${videoId}` }] : []),
+      ];
+
+      let data;
+      let lastError;
+      for (const candidate of candidates) {
+        try {
+          data = await rapidApiGet(candidate);
+          const parsed = extractLinksFromPayload(data, 'tiktok');
+          if (parsed.length) break;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      if (!data) {
+        throw new Error(lastError?.message || 'Impossible de joindre la source TikTok');
+      }
 
       const rawLinks = extractLinksFromPayload(data, 'tiktok');
       const uniqueLinks = [];
@@ -156,9 +202,9 @@ exports.handler = async (event) => {
       if (!uniqueLinks.length) throw new Error('Impossible de récupérer la vidéo TikTok');
 
       result = {
-        title: data?.title || 'Vidéo TikTok',
-        author: data?.author?.unique_id || data?.author?.nickname || data?.author || '',
-        thumb: data?.cover || data?.origin_cover || data?.ai_dynamic_cover || null,
+        title: data?.title || data?.data?.title || data?.data?.desc || 'Vidéo TikTok',
+        author: data?.author?.unique_id || data?.author?.nickname || data?.author || data?.data?.author || '',
+        thumb: data?.cover || data?.origin_cover || data?.ai_dynamic_cover || data?.data?.cover || data?.data?.origin_cover || null,
         links: uniqueLinks.slice(0, 4).map((item, index) => ({
           label: `📹 Téléchargement ${index + 1}`,
           url: item.url,
