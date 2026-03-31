@@ -14,6 +14,7 @@
       --bh: rgba(255,255,255,0.14); --accent: #00e5a0; --adim: rgba(0,229,160,0.08);
       --a2: #ff3c6e; --a3: #4d8cff; --text: #dde1ea; --muted: #4a5060; --r: 14px;
     }
+    body[data-p="tiktok"]    { --accent: #25f4ee; --adim: rgba(37,244,238,.09); }
     body[data-p="instagram"] { --accent: #ff3c6e; --adim: rgba(255,60,110,.09); }
     body[data-p="youtube"]   { --accent: #4d8cff; --adim: rgba(77,140,255,.1); }
     body[data-p="facebook"]  { --accent: #4d8cff; --adim: rgba(77,140,255,.1); }
@@ -81,7 +82,7 @@
   <header>
     <div class="wm">Social Videos Downloader</div>
     <h1><span class="hero">Télécharge</span><br><span class="hi">sans</span> <span class="dim">filigrane</span></h1>
-    <p class="tag">Instagram / Threads <span>/</span> YouTube</p>
+    <p class="tag">TikTok <span>/</span> Instagram / Threads <span>/</span> YouTube</p>
   </header>
   <div class="pbadge" id="pbadge">⚡ Détection automatique de la plateforme</div>
   <div class="card">
@@ -110,11 +111,13 @@
 </div>
 <script>
   const PLATFORM_LABELS = {
+    tiktok: 'TikTok',
     instagram: 'Instagram / Threads',
     youtube: 'YouTube'
   };
 
   function detect(url) {
+    if (url.includes('tiktok.com') || url.includes('vm.tiktok')) return 'tiktok';
     if (url.includes('instagram.com') || url.includes('threads.net') || url.includes('threads.com')) return 'instagram';
     if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
     return null;
@@ -126,7 +129,7 @@
       document.getElementById('pbadge').textContent = `✓ Plateforme détectée : ${PLATFORM_LABELS[platform]}`;
       return;
     }
-    document.body.dataset.p = 'instagram';
+    document.body.dataset.p = 'tiktok';
     document.getElementById('pbadge').textContent = '⚡ Détection automatique de la plateforme';
   }
 
@@ -144,7 +147,7 @@
     const url = document.getElementById('url').value.trim();
     if (!url) { showErr('Colle un lien d\'abord !'); return; }
     const plat = detect(url);
-    if (!plat) { showErr('Lien non reconnu. Instagram/Threads ou YouTube uniquement.'); return; }
+    if (!plat) { showErr('Lien non reconnu. TikTok, Instagram/Threads ou YouTube uniquement.'); return; }
     applyPlatform(plat);
     load(true); off('res'); hideErr();
     try {
