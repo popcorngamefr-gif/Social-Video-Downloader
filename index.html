@@ -80,7 +80,7 @@
   <header>
     <div class="wm">VidDrop</div>
     <h1><span class="hero">Télécharge</span><br><span class="hi">sans</span> <span class="dim">filigrane</span></h1>
-    <p class="tag">TikTok <span>/</span> Instagram <span>/</span> YouTube <span>/</span> Facebook <span>/</span> X</p>
+    <p class="tag">Instagram / Threads <span>/</span> YouTube</p>
   </header>
   <div class="pbadge" id="pbadge">⚡ Détection automatique de la plateforme</div>
   <div class="card">
@@ -109,19 +109,13 @@
 </div>
 <script>
   const PLATFORM_LABELS = {
-    tiktok: 'TikTok',
-    instagram: 'Instagram',
-    youtube: 'YouTube',
-    facebook: 'Facebook',
-    twitter: 'X / Twitter'
+    instagram: 'Instagram / Threads',
+    youtube: 'YouTube'
   };
 
   function detect(url) {
-    if (url.includes('tiktok.com') || url.includes('vm.tiktok')) return 'tiktok';
-    if (url.includes('instagram.com')) return 'instagram';
+    if (url.includes('instagram.com') || url.includes('threads.net') || url.includes('threads.com')) return 'instagram';
     if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
-    if (url.includes('facebook.com') || url.includes('fb.watch')) return 'facebook';
-    if (url.includes('twitter.com') || url.includes('x.com')) return 'twitter';
     return null;
   }
 
@@ -131,7 +125,7 @@
       document.getElementById('pbadge').textContent = `✓ Plateforme détectée : ${PLATFORM_LABELS[platform]}`;
       return;
     }
-    document.body.dataset.p = 'tiktok';
+    document.body.dataset.p = 'instagram';
     document.getElementById('pbadge').textContent = '⚡ Détection automatique de la plateforme';
   }
 
@@ -149,7 +143,7 @@
     const url = document.getElementById('url').value.trim();
     if (!url) { showErr('Colle un lien d\'abord !'); return; }
     const plat = detect(url);
-    if (!plat) { showErr('Lien non reconnu. TikTok, Instagram, YouTube, Facebook ou X/Twitter uniquement.'); return; }
+    if (!plat) { showErr('Lien non reconnu. Instagram/Threads ou YouTube uniquement.'); return; }
     applyPlatform(plat);
     load(true); off('res'); hideErr();
     try {

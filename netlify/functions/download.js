@@ -12,114 +12,146 @@ exports.handler = async (event) => {
   if (!API_KEY) return { statusCode: 500, headers: cors, body: JSON.stringify({ error: 'Clé API manquante côté serveur' }) };
 
   let body;
-  try { body = JSON.parse(event.body); }
-  catch { return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'JSON invalide' }) }; }
+  try {
+    body = JSON.parse(event.body);
+  } catch {
+    return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'JSON invalide' }) };
+  }
 
   const { url } = body;
   if (!url) return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'URL manquante' }) };
 
-  // Détection plateforme
+  const normalizedUrl = String(url).toLowerCase();
   let platform;
-  if (url.includes('tiktok.com') || url.includes('vm.tiktok')) platform = 'tiktok';
-  else if (url.includes('instagram.com')) platform = 'instagram';
-  else if (url.includes('youtube.com') || url.includes('youtu.be')) platform = 'youtube';
-  else if (url.includes('facebook.com') || url.includes('fb.watch')) platform = 'facebook';
-  else if (url.includes('twitter.com') || url.includes('x.com')) platform = 'twitter';
-  else return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'Plateforme non supportée. TikTok, Instagram, YouTube, Facebook ou X/Twitter uniquement.' }) };
+
+  if (normalizedUrl.includes('instagram.com') || normalizedUrl.includes('threads.net') || normalizedUrl.includes('threads.com')) {
+    platform = 'instagram';
+  } else if (normalizedUrl.includes('youtube.com') || normalizedUrl.includes('youtu.be')) {
+    platform = 'youtube';
+  } else {
+    return {
+      statusCode: 400,
+      headers: cors,
+      body: JSON.stringify({ error: 'Plateforme non supportée. Utilise uniquement un lien YouTube, Instagram ou Threads.' }),
+    };
+  }
+
+  const rapidApiGet = async ({ host, endpoint }) => {
+    const response = await fetch(`https://${host}${endpoint}`, {
+      method: 'GET',
+      headers: {
+        'X-RapidAPI-Key': API_KEY,
+        'X-RapidAPI-Host': host,
+      },
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload?.message || payload?.error || `Erreur API (${response.status})`);
+    }
+    return payload;
+  };
 
   try {
     let result;
 
-    if (platform === 'tiktok') {
-      const res = await fetch(`https://tiktok-video-no-watermark2.p.rapidapi.com/?url=${encodeURIComponent(url)}&hd=1`, {
-        headers: { 'X-RapidAPI-Key': API_KEY, 'X-RapidAPI-Host': 'tiktok-video-no-watermark2.p.rapidapi.com' }
-      });
-      const d = await res.json();
-      if (!d || d.code !== 0) throw new Error(d?.msg || 'Erreur TikTok');
-      const v = d.data;
-      result = {
-        title: v.title || 'Vidéo TikTok',
-        author: v.author?.unique_id ? '@' + v.author.unique_id : '',
-        thumb: v.cover || null,
-        links: [
-          v.hdplay && { label: '📹 Vidéo HD (sans filigrane)', url: v.hdplay, quality: 'HD · MP4' },
-          v.play   && { label: '📹 Vidéo SD', url: v.play, quality: 'SD · MP4' },
-          v.music  && { label: '🎵 Musique', url: v.music, quality: 'MP3' },
-        ].filter(Boolean),
-      };
-    }
+    if (platform === 'instagram') {
+      const encoded = encodeURIComponent(url);
+      const isThreads = normalizedUrl.includes('threads.net') || normalizedUrl.includes('threads.com');
 
-    else if (platform === 'instagram') {
-      const res = await fetch(`https://instagram-downloader-download-instagram-videos-stories.p.rapidapi.com/index?url=${encodeURIComponent(url)}`, {
-        headers: { 'X-RapidAPI-Key': API_KEY, 'X-RapidAPI-Host': 'instagram-downloader-download-instagram-videos-stories.p.rapidapi.com' }
-      });
-      const d = await res.json();
-      const videoUrl = d.url || (Array.isArray(d.media) ? d.media[0] : d.media);
-      if (!videoUrl) throw new Error('Impossible de récupérer la vidéo Instagram');
-      result = {
-        title: 'Reel Instagram',
-        author: d.username ? '@' + d.username : '',
-        thumb: d.thumbnail || null,
-        links: [{ label: '📹 Vidéo sans filigrane', url: videoUrl, quality: 'MP4' }],
-      };
-    }
+      const data = isThreads
+        ? await rapidApiGet({
+            host: 'instagram-downloader-download-instagram-videos-stories5.p.rapidapi.com',
+            endpoint: `/getThreads?url=${encoded}`,
+          })
+        : await rapidApiGet({
+            host: 'instagram-downloader-download-instagram-videos-stories5.p.rapidapi.com',
+            endpoint: `/index?url=${encoded}`,
+          });
 
-    else if (platform === 'youtube') {
-      const res = await fetch(`https://youtube-video-and-shorts-downloader.p.rapidapi.com/download?url=${encodeURIComponent(url)}`, {
-        headers: { 'X-RapidAPI-Key': API_KEY, 'X-RapidAPI-Host': 'youtube-video-and-shorts-downloader.p.rapidapi.com' }
-      });
-      const d = await res.json();
-      if (!d || !d.formats) throw new Error('Impossible de récupérer la vidéo YouTube');
-      const fmts = d.formats.filter(f => f.url && f.ext === 'mp4').slice(0, 3);
+      const links = [];
+
+      if (typeof data?.url === 'string') links.push(data.url);
+      if (Array.isArray(data?.media)) {
+        for (const mediaItem of data.media) {
+          if (typeof mediaItem === 'string') links.push(mediaItem);
+          if (mediaItem?.url) links.push(mediaItem.url);
+          if (mediaItem?.download_url) links.push(mediaItem.download_url);
+        }
+      }
+      if (Array.isArray(data?.video_urls)) links.push(...data.video_urls.filter(Boolean));
+      if (Array.isArray(data?.videos)) {
+        for (const videoItem of data.videos) {
+          if (videoItem?.url) links.push(videoItem.url);
+          if (videoItem?.download_url) links.push(videoItem.download_url);
+        }
+      }
+
+      const uniqueLinks = [...new Set(links.filter(Boolean))];
+      if (!uniqueLinks.length) throw new Error('Impossible de récupérer la vidéo Instagram/Threads');
+
       result = {
-        title: d.title || 'Vidéo YouTube',
-        author: d.channel || '',
-        thumb: d.thumbnail || null,
-        links: fmts.map(f => ({
-          label: `📹 ${f.format_note || f.quality || 'Vidéo'}`,
-          url: f.url,
-          quality: (f.format_note || '') + ' · MP4',
+        title: data?.title || (isThreads ? 'Post Threads' : 'Post Instagram'),
+        author: data?.username ? `@${data.username}` : '',
+        thumb: data?.thumbnail || data?.cover || null,
+        links: uniqueLinks.slice(0, 4).map((mediaUrl, index) => ({
+          label: `📹 Téléchargement ${index + 1}`,
+          url: mediaUrl,
+          quality: 'MP4',
         })),
       };
-    }
+    } else {
+      const encoded = encodeURIComponent(url);
 
-    else if (platform === 'facebook') {
-      const res = await fetch(`https://facebook-reel-and-video-downloader.p.rapidapi.com/?url=${encodeURIComponent(url)}`, {
-        headers: { 'X-RapidAPI-Key': API_KEY, 'X-RapidAPI-Host': 'facebook-reel-and-video-downloader.p.rapidapi.com' }
-      });
-      const d = await res.json();
-      const linksData = d?.links || d?.data || {};
-      const hd = linksData?.['Download High Quality'] || linksData?.hd;
-      const sd = linksData?.['Download Low Quality'] || linksData?.sd;
-      if (!hd && !sd) throw new Error('Impossible de récupérer la vidéo Facebook');
-      result = {
-        title: d?.title || 'Vidéo Facebook',
-        author: '',
-        thumb: d?.thumbnail || null,
-        links: [
-          hd && { label: '📹 Vidéo HD', url: hd, quality: 'HD · MP4' },
-          sd && { label: '📹 Vidéo SD', url: sd, quality: 'SD · MP4' },
-        ].filter(Boolean),
-      };
-    }
+      const candidates = [
+        {
+          host: 'youtube-video-and-shorts-downloader1.p.rapidapi.com',
+          endpoint: `/youtube/download?url=${encoded}`,
+        },
+        {
+          host: 'youtube-video-and-shorts-downloader1.p.rapidapi.com',
+          endpoint: `/youtube/links?url=${encoded}`,
+        },
+        {
+          host: 'youtube-video-and-shorts-downloader.p.rapidapi.com',
+          endpoint: `/download?url=${encoded}`,
+        },
+      ];
 
-    else {
-      const res = await fetch(`https://twitter-api45.p.rapidapi.com/twvideo?id=${encodeURIComponent(url)}`, {
-        headers: { 'X-RapidAPI-Key': API_KEY, 'X-RapidAPI-Host': 'twitter-api45.p.rapidapi.com' }
-      });
-      const d = await res.json();
-      const medias = Array.isArray(d?.media) ? d.media : [];
-      const videos = medias.filter(m => m.url);
-      if (!videos.length) throw new Error('Impossible de récupérer la vidéo X/Twitter');
+      let data;
+      let lastError;
+      for (const candidate of candidates) {
+        try {
+          data = await rapidApiGet(candidate);
+          if (data) break;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      if (!data) {
+        throw new Error(lastError?.message || 'Impossible de joindre la source YouTube');
+      }
+
+      const formats = Array.isArray(data?.formats) ? data.formats : Array.isArray(data?.links) ? data.links : [];
+
+      const downloadable = formats
+        .filter((item) => item?.url)
+        .map((item) => ({
+          label: `📹 ${item?.format_note || item?.quality || item?.label || 'Vidéo'}`,
+          url: item.url,
+          quality: `${item?.format_note || item?.quality || 'MP4'} · ${item?.ext?.toUpperCase() || 'MP4'}`,
+        }));
+
+      if (!downloadable.length) {
+        throw new Error('Impossible de récupérer des liens de téléchargement YouTube');
+      }
+
       result = {
-        title: d?.text?.slice(0, 80) || 'Vidéo X/Twitter',
-        author: d?.user?.screen_name ? '@' + d.user.screen_name : '',
-        thumb: videos[0]?.preview_image_url || null,
-        links: videos.slice(0, 3).map((v, i) => ({
-          label: `📹 Vidéo ${i + 1}`,
-          url: v.url,
-          quality: v?.quality || 'MP4',
-        })),
+        title: data?.title || 'Vidéo YouTube',
+        author: data?.channel || data?.author || '',
+        thumb: data?.thumbnail || data?.thumb || null,
+        links: downloadable.slice(0, 5),
       };
     }
 
@@ -128,8 +160,11 @@ exports.handler = async (event) => {
       headers: { ...cors, 'Content-Type': 'application/json' },
       body: JSON.stringify(result),
     };
-
   } catch (err) {
-    return { statusCode: 500, headers: cors, body: JSON.stringify({ error: err.message || 'Erreur inconnue' }) };
+    return {
+      statusCode: 500,
+      headers: cors,
+      body: JSON.stringify({ error: err.message || 'Erreur inconnue' }),
+    };
   }
 };
