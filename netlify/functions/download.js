@@ -22,14 +22,15 @@ exports.handler = async (event) => {
   if (!url) return { statusCode: 400, headers: cors, body: JSON.stringify({ error: 'URL manquante' }) };
 
   const normalizedUrl = String(url).toLowerCase();
+  const isTikTok = normalizedUrl.includes('tiktok.com') || normalizedUrl.includes('vm.tiktok');
   const isInstagram = normalizedUrl.includes('instagram.com') || normalizedUrl.includes('threads.net') || normalizedUrl.includes('threads.com');
   const isYoutube = normalizedUrl.includes('youtube.com') || normalizedUrl.includes('youtu.be');
 
-  if (!isInstagram && !isYoutube) {
+  if (!isTikTok && !isInstagram && !isYoutube) {
     return {
       statusCode: 400,
       headers: cors,
-      body: JSON.stringify({ error: 'Plateforme non supportée. Utilise uniquement un lien YouTube, Instagram ou Threads.' }),
+      body: JSON.stringify({ error: 'Plateforme non supportée. Utilise un lien TikTok, Instagram/Threads ou YouTube.' }),
     };
   }
 
@@ -95,7 +96,45 @@ exports.handler = async (event) => {
   try {
     let result;
 
-    if (isInstagram) {
+    if (isTikTok) {
+      const encodedUrl = encodeURIComponent(url);
+
+      const tikTokCandidates = [
+        {
+          host: 'tiktok-video-no-watermark2.p.rapidapi.com',
+          endpoint: `/?url=${encodedUrl}&hd=1`,
+          enabled: true,
+        },
+      ];
+
+      result = await runFallbacks(
+        tikTokCandidates,
+        (data) => {
+          const payload = data?.data || data;
+          const links = uniqueNonEmpty([
+            payload?.hdplay,
+            payload?.play,
+            payload?.wmplay,
+            payload?.music,
+            payload?.music_info?.play,
+          ]);
+
+          if (!links.length) return null;
+
+          return {
+            title: payload?.title || 'Vidéo TikTok',
+            author: payload?.author?.unique_id ? `@${payload.author.unique_id}` : '',
+            thumb: payload?.cover || payload?.origin_cover || null,
+            links: links.slice(0, 4).map((mediaUrl, index) => ({
+              label: index === 0 ? '📹 Vidéo HD (sans watermark)' : `📹 Téléchargement ${index + 1}`,
+              url: mediaUrl,
+              quality: mediaUrl.includes('.mp3') ? 'MP3' : 'MP4',
+            })),
+          };
+        },
+        'Impossible de récupérer la vidéo TikTok',
+      );
+    } else if (isInstagram) {
       const encodedUrl = encodeURIComponent(url);
       const mediaId = extractMediaIdFromUrl(url);
 
