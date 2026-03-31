@@ -8,205 +8,81 @@
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg: #060810;
-      --surface: #0d1017;
-      --border: rgba(255,255,255,0.06);
-      --border-hover: rgba(255,255,255,0.14);
-      --accent: #00e5a0;
-      --accent-dim: rgba(0,229,160,0.08);
-      --accent2: #ff3c6e;
-      --accent3: #4d8cff;
-      --text: #dde1ea;
-      --muted: #4a5060;
-      --radius: 14px;
+      --bg: #060810; --surface: #0d1017; --border: rgba(255,255,255,0.06);
+      --bh: rgba(255,255,255,0.14); --accent: #00e5a0; --adim: rgba(0,229,160,0.08);
+      --a2: #ff3c6e; --a3: #4d8cff; --text: #dde1ea; --muted: #4a5060; --r: 14px;
     }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Syne', sans-serif;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
-
+    body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-x: hidden; }
     body::after {
-      content: '';
-      position: fixed; inset: 0;
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 999; opacity: .03;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-      opacity: 0.03; pointer-events: none; z-index: 999;
     }
-
     .glow { position: fixed; border-radius: 50%; filter: blur(100px); pointer-events: none; z-index: 0; }
-    .glow-a { width: 600px; height: 600px; background: radial-gradient(circle, rgba(0,229,160,0.09), transparent 65%); top: -200px; left: -200px; animation: ga 14s ease-in-out infinite alternate; }
-    .glow-b { width: 400px; height: 400px; background: radial-gradient(circle, rgba(255,60,110,0.07), transparent 65%); bottom: -100px; right: -100px; animation: gb 18s ease-in-out infinite alternate; }
-    @keyframes ga { to { transform: translate(60px, 50px); } }
-    @keyframes gb { to { transform: translate(-40px, -60px); } }
-
-    .wrapper {
-      position: relative; z-index: 1;
-      max-width: 680px;
-      margin: 0 auto;
-      padding: 64px 20px 120px;
-    }
-
-    header { text-align: center; margin-bottom: 52px; animation: up .5s ease both; }
-
-    .wordmark {
-      font-size: 13px; font-family: 'JetBrains Mono', monospace;
-      letter-spacing: 4px; color: var(--accent);
-      text-transform: uppercase; margin-bottom: 22px; opacity: 0.8;
-    }
-
-    h1 {
-      font-size: clamp(2.4rem, 7vw, 4rem);
-      font-weight: 800; letter-spacing: -2px; line-height: 1.05; margin-bottom: 14px;
-    }
-    h1 .hi  { color: var(--accent); }
-    h1 .dim { color: var(--muted); }
-
-    .tagline {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px; color: var(--muted); letter-spacing: 1px;
-    }
-    .tagline span { color: rgba(255,255,255,0.2); margin: 0 6px; }
-
-    .tabs {
-      display: flex; gap: 6px;
-      margin-bottom: 12px;
-      animation: up .5s .08s ease both;
-    }
-    .tab {
-      flex: 1; padding: 9px 0;
-      border: 1px solid var(--border); border-radius: 9px;
-      background: var(--surface); color: var(--muted);
-      font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
-      cursor: pointer; transition: all .18s;
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-    }
-    .tab svg { width: 14px; height: 14px; fill: currentColor; flex-shrink: 0; }
-    .tab:hover { border-color: var(--border-hover); color: var(--text); }
-    .tab.active[data-p="tiktok"]    { border-color: var(--accent);  color: var(--accent);  background: var(--accent-dim); }
-    .tab.active[data-p="instagram"] { border-color: var(--accent2); color: var(--accent2); background: rgba(255,60,110,.07); }
-    .tab.active[data-p="youtube"]   { border-color: var(--accent3); color: var(--accent3); background: rgba(77,140,255,.07); }
-
-    .card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 18px;
-      margin-bottom: 12px; animation: up .5s .12s ease both;
-    }
-
-    .input-row { display: flex; gap: 8px; }
-
-    input[type="url"] {
-      flex: 1; background: var(--bg);
-      border: 1px solid var(--border); border-radius: 9px;
-      padding: 13px 15px; color: var(--text);
-      font-family: 'JetBrains Mono', monospace; font-size: 12px;
-      outline: none; transition: border-color .2s; min-width: 0;
-    }
-    input[type="url"]::placeholder { color: var(--muted); }
-    input[type="url"]:focus { border-color: var(--accent); }
-
-    .btn {
-      padding: 13px 22px; background: var(--accent); color: #040c08;
-      border: none; border-radius: 9px;
-      font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 800;
-      cursor: pointer; white-space: nowrap; transition: all .18s;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .btn:hover:not(:disabled) { background: #00ffb3; transform: translateY(-1px); }
-    .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
-    .btn .spinner {
-      display: none; width: 14px; height: 14px;
-      border: 2px solid rgba(0,0,0,.25); border-top-color: #040c08;
-      border-radius: 50%; animation: spin .55s linear infinite;
-    }
-    .btn.loading .lbl { display: none; }
-    .btn.loading .spinner { display: block; }
-
-    .err {
-      display: none; margin-top: 10px;
-      padding: 10px 14px;
-      background: rgba(255,60,110,.07);
-      border: 1px solid rgba(255,60,110,.2);
-      border-radius: 8px;
-      font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent2);
-    }
-    .err.show { display: block; }
-
-    #result {
-      display: none; background: var(--surface);
-      border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 18px; animation: up .35s ease both;
-    }
-    #result.show { display: block; }
-
-    .res-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
-    #thumb {
-      width: 68px; height: 68px; object-fit: cover;
-      border-radius: 8px; border: 1px solid var(--border);
-      display: none; flex-shrink: 0;
-    }
-    #thumb.show { display: block; }
-    .res-meta h3 { font-size: 14px; font-weight: 700; margin-bottom: 3px; line-height: 1.3; }
-    .res-meta p  { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); }
-
-    .dl-list { display: flex; flex-direction: column; gap: 7px; }
-    .dl-item {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 11px 14px; background: var(--bg);
-      border: 1px solid var(--border); border-radius: 9px;
-      text-decoration: none; color: var(--text);
-      font-size: 13px; font-weight: 700; transition: all .18s;
-    }
-    .dl-item:hover { border-color: var(--accent); color: var(--accent); }
-    .dl-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); }
-    .dl-item:hover .dl-meta { color: rgba(0,229,160,.6); }
-
-    .steps {
-      display: grid; grid-template-columns: repeat(3,1fr); gap: 10px;
-      margin-top: 44px; animation: up .5s .22s ease both;
-    }
-    .step {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 18px 14px; text-align: center;
-    }
-    .step-n { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 3px; margin-bottom: 10px; }
-    .step-e { font-size: 26px; margin-bottom: 8px; }
-    .step h4 { font-size: 12px; font-weight: 700; margin-bottom: 5px; }
-    .step p  { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); line-height: 1.6; }
-
-    footer {
-      text-align: center; margin-top: 52px;
-      font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted);
-      animation: up .5s .3s ease both;
-    }
-    footer a { color: var(--muted); text-decoration: underline; }
-
-    @keyframes up   { from { opacity:0; transform: translateY(18px); } to { opacity:1; transform: none; } }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    @media (max-width: 500px) {
-      .input-row { flex-direction: column; }
-      .steps { grid-template-columns: 1fr; }
-    }
+    .ga { width:600px;height:600px;background:radial-gradient(circle,rgba(0,229,160,.09),transparent 65%);top:-200px;left:-200px;animation:ga 14s ease-in-out infinite alternate; }
+    .gb { width:400px;height:400px;background:radial-gradient(circle,rgba(255,60,110,.07),transparent 65%);bottom:-100px;right:-100px;animation:gb 18s ease-in-out infinite alternate; }
+    @keyframes ga { to { transform: translate(60px,50px); } }
+    @keyframes gb { to { transform: translate(-40px,-60px); } }
+    .wrap { position:relative;z-index:1;max-width:680px;margin:0 auto;padding:64px 20px 120px; }
+    header { text-align:center;margin-bottom:52px;animation:up .5s ease both; }
+    .wm { font-size:13px;font-family:'JetBrains Mono',monospace;letter-spacing:4px;color:var(--accent);text-transform:uppercase;margin-bottom:22px;opacity:.8; }
+    h1 { font-size:clamp(2.4rem,7vw,4rem);font-weight:800;letter-spacing:-2px;line-height:1.05;margin-bottom:14px; }
+    h1 .hi { color:var(--accent); } h1 .dim { color:var(--muted); }
+    .tag { font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:1px; }
+    .tag span { color:rgba(255,255,255,.2);margin:0 6px; }
+    .tabs { display:flex;gap:6px;margin-bottom:12px;animation:up .5s .08s ease both; }
+    .tab { flex:1;padding:9px 0;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--muted);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:6px; }
+    .tab svg { width:14px;height:14px;fill:currentColor;flex-shrink:0; }
+    .tab:hover { border-color:var(--bh);color:var(--text); }
+    .tab.active[data-p="tiktok"]    { border-color:var(--accent);color:var(--accent);background:var(--adim); }
+    .tab.active[data-p="instagram"] { border-color:var(--a2);color:var(--a2);background:rgba(255,60,110,.07); }
+    .tab.active[data-p="youtube"]   { border-color:var(--a3);color:var(--a3);background:rgba(77,140,255,.07); }
+    .card { background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px;animation:up .5s .12s ease both; }
+    .irow { display:flex;gap:8px; }
+    input[type="url"] { flex:1;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:13px 15px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;transition:border-color .2s;min-width:0; }
+    input::placeholder { color:var(--muted); }
+    input:focus { border-color:var(--accent); }
+    .btn { padding:13px 22px;background:var(--accent);color:#040c08;border:none;border-radius:9px;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;transition:all .18s;display:flex;align-items:center;gap:8px; }
+    .btn:hover:not(:disabled) { background:#00ffb3;transform:translateY(-1px); }
+    .btn:disabled { opacity:.45;cursor:not-allowed;transform:none; }
+    .spin { display:none;width:14px;height:14px;border:2px solid rgba(0,0,0,.25);border-top-color:#040c08;border-radius:50%;animation:spin .55s linear infinite; }
+    .btn.loading .lbl { display:none; }
+    .btn.loading .spin { display:block; }
+    .err { display:none;margin-top:10px;padding:10px 14px;background:rgba(255,60,110,.07);border:1px solid rgba(255,60,110,.2);border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--a2); }
+    .err.on { display:block; }
+    #res { display:none;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;animation:up .35s ease both; }
+    #res.on { display:block; }
+    .rh { display:flex;align-items:center;gap:12px;margin-bottom:14px; }
+    #thumb { width:68px;height:68px;object-fit:cover;border-radius:8px;border:1px solid var(--border);display:none;flex-shrink:0; }
+    #thumb.on { display:block; }
+    .rm h3 { font-size:14px;font-weight:700;margin-bottom:3px;line-height:1.3; }
+    .rm p  { font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted); }
+    .dlist { display:flex;flex-direction:column;gap:7px; }
+    .di { display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:9px;text-decoration:none;color:var(--text);font-size:13px;font-weight:700;transition:all .18s; }
+    .di:hover { border-color:var(--accent);color:var(--accent); }
+    .dq { font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted); }
+    .di:hover .dq { color:rgba(0,229,160,.6); }
+    .steps { display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:44px;animation:up .5s .22s ease both; }
+    .step { background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 14px;text-align:center; }
+    .sn { font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--accent);letter-spacing:3px;margin-bottom:10px; }
+    .se { font-size:26px;margin-bottom:8px; }
+    .step h4 { font-size:12px;font-weight:700;margin-bottom:5px; }
+    .step p  { font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);line-height:1.6; }
+    footer { text-align:center;margin-top:52px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--muted);animation:up .5s .3s ease both; }
+    @keyframes up   { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:none} }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    @media(max-width:500px){.irow{flex-direction:column}.steps{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
-
-<div class="glow glow-a"></div>
-<div class="glow glow-b"></div>
-
-<div class="wrapper">
-
+<div class="glow ga"></div>
+<div class="glow gb"></div>
+<div class="wrap">
   <header>
-    <div class="wordmark">VidDrop</div>
+    <div class="wm">VidDrop</div>
     <h1>Télécharge<br><span class="hi">sans</span> <span class="dim">filigrane</span></h1>
-    <p class="tagline">TikTok <span>/</span> Instagram <span>/</span> YouTube</p>
+    <p class="tag">TikTok <span>/</span> Instagram <span>/</span> YouTube</p>
   </header>
-
   <div class="tabs">
     <button class="tab active" data-p="tiktok">
       <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.89a8.2 8.2 0 004.79 1.54V7c-.01 0-1.5-.01-3.02-.31z"/></svg>
@@ -221,125 +97,85 @@
       YouTube
     </button>
   </div>
-
   <div class="card">
-    <div class="input-row">
-      <input type="url" id="urlInput" placeholder="Colle le lien ici…" autocomplete="off" />
-      <button class="btn" id="dlBtn">
+    <div class="irow">
+      <input type="url" id="url" placeholder="Colle le lien ici…" autocomplete="off" />
+      <button class="btn" id="btn">
         <span class="lbl">↓ Télécharger</span>
-        <div class="spinner"></div>
+        <div class="spin"></div>
       </button>
     </div>
-    <div class="err" id="errMsg"></div>
+    <div class="err" id="err"></div>
   </div>
-
-  <div id="result">
-    <div class="res-head">
+  <div id="res">
+    <div class="rh">
       <img id="thumb" alt="" />
-      <div class="res-meta">
-        <h3 id="resTitle">Vidéo prête</h3>
-        <p id="resAuthor"></p>
-      </div>
+      <div class="rm"><h3 id="rtitle">Vidéo prête</h3><p id="rauthor"></p></div>
     </div>
-    <div class="dl-list" id="dlList"></div>
+    <div class="dlist" id="dlist"></div>
   </div>
-
   <div class="steps">
-    <div class="step">
-      <div class="step-n">01</div>
-      <div class="step-e">🔗</div>
-      <h4>Copie le lien</h4>
-      <p>Depuis l'app ou le navigateur</p>
-    </div>
-    <div class="step">
-      <div class="step-n">02</div>
-      <div class="step-e">⚡</div>
-      <h4>Un clic</h4>
-      <p>Analyse instantanée</p>
-    </div>
-    <div class="step">
-      <div class="step-n">03</div>
-      <div class="step-e">📥</div>
-      <h4>Télécharge</h4>
-      <p>HD, sans filigrane</p>
-    </div>
+    <div class="step"><div class="sn">01</div><div class="se">🔗</div><h4>Copie le lien</h4><p>Depuis l'app ou le navigateur</p></div>
+    <div class="step"><div class="sn">02</div><div class="se">⚡</div><h4>Un clic</h4><p>Analyse instantanée</p></div>
+    <div class="step"><div class="sn">03</div><div class="se">📥</div><h4>Télécharge</h4><p>HD, sans filigrane</p></div>
   </div>
-
-  <footer>
-    VidDrop · usage personnel · propulsé par <a href="https://cobalt.tools" target="_blank">cobalt.tools</a>
-  </footer>
-
+  <footer>VidDrop · usage personnel uniquement</footer>
 </div>
-
 <script>
-  document.querySelectorAll('.tab').forEach(t => {
-    t.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-      t.classList.add('active');
-      hide('result'); hideErr();
-    });
-  });
-
-  document.getElementById('urlInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') go();
-  });
-  document.getElementById('dlBtn').addEventListener('click', go);
+  function detect(url) {
+    if (url.includes('tiktok.com') || url.includes('vm.tiktok')) return 'tiktok';
+    if (url.includes('instagram.com')) return 'instagram';
+    if (url.includes('youtube.com') || url.includes('youtu.be')) return 'youtube';
+    return null;
+  }
 
   async function go() {
-    const url = document.getElementById('urlInput').value.trim();
+    const url = document.getElementById('url').value.trim();
     if (!url) { showErr('Colle un lien d\'abord !'); return; }
-
-    setLoading(true);
-    hide('result'); hideErr();
-
+    const plat = detect(url);
+    if (!plat) { showErr('Lien non reconnu. TikTok, Instagram ou YouTube uniquement.'); return; }
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.p === plat));
+    load(true); off('res'); hideErr();
     try {
-      // Netlify Functions endpoint
       const res = await fetch('/.netlify/functions/download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
       });
-
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || 'Erreur serveur');
-
-      renderResult(data);
-    } catch (err) {
-      showErr(err.message || 'Une erreur est survenue. Réessaie.');
+      render(data);
+    } catch(e) {
+      showErr(e.message || 'Erreur. Vérifie le lien et réessaie.');
     } finally {
-      setLoading(false);
+      load(false);
     }
   }
 
-  function renderResult({ title, thumb, links }) {
-    document.getElementById('resTitle').textContent = title || 'Vidéo trouvée';
-
-    const thumbEl = document.getElementById('thumb');
-    if (thumb) { thumbEl.src = thumb; thumbEl.classList.add('show'); }
-    else { thumbEl.classList.remove('show'); }
-
-    document.getElementById('dlList').innerHTML = links.map(l => `
-      <a class="dl-item" href="${l.url}" target="_blank" rel="noopener">
-        <span>${l.label}</span>
-        <span class="dl-meta">${l.quality} ↗</span>
-      </a>
-    `).join('');
-
-    document.getElementById('result').classList.add('show');
+  function render({ title, author, thumb, links }) {
+    document.getElementById('rtitle').textContent = title;
+    document.getElementById('rauthor').textContent = author || '';
+    const t = document.getElementById('thumb');
+    if (thumb) { t.src = thumb; t.classList.add('on'); } else { t.classList.remove('on'); }
+    document.getElementById('dlist').innerHTML = links.map(l =>
+      `<a class="di" href="${l.url}" target="_blank" rel="noopener"><span>${l.label}</span><span class="dq">${l.quality} ↗</span></a>`
+    ).join('');
+    document.getElementById('res').classList.add('on');
   }
 
-  function setLoading(on) {
-    const btn = document.getElementById('dlBtn');
-    btn.classList.toggle('loading', on);
-    btn.disabled = on;
-  }
-  function showErr(msg) {
-    const el = document.getElementById('errMsg');
-    el.textContent = '⚠ ' + msg;
-    el.classList.add('show');
-  }
-  function hideErr() { document.getElementById('errMsg').classList.remove('show'); }
-  function hide(id)  { document.getElementById(id).classList.remove('show'); }
+  function load(on) { const b = document.getElementById('btn'); b.classList.toggle('loading', on); b.disabled = on; }
+  function showErr(m) { const e = document.getElementById('err'); e.textContent = '⚠ ' + m; e.classList.add('on'); }
+  function hideErr() { document.getElementById('err').classList.remove('on'); }
+  function off(id) { document.getElementById(id).classList.remove('on'); }
+
+  document.getElementById('btn').addEventListener('click', go);
+  document.getElementById('url').addEventListener('keydown', e => { if(e.key==='Enter') go(); });
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active'); off('res'); hideErr();
+    });
+  });
 </script>
 </body>
 </html>
