@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VidDrop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #060810;
+      --surface: #0d1017;
+      --border: rgba(255,255,255,0.06);
+      --border-hover: rgba(255,255,255,0.14);
+      --accent: #00e5a0;
+      --accent-dim: rgba(0,229,160,0.08);
+      --accent2: #ff3c6e;
+      --accent3: #4d8cff;
+      --text: #dde1ea;
+      --muted: #4a5060;
+      --radius: 14px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      opacity: 0.03; pointer-events: none; z-index: 999;
+    }
+
+    .glow { position: fixed; border-radius: 50%; filter: blur(100px); pointer-events: none; z-index: 0; }
+    .glow-a { width: 600px; height: 600px; background: radial-gradient(circle, rgba(0,229,160,0.09), transparent 65%); top: -200px; left: -200px; animation: ga 14s ease-in-out infinite alternate; }
+    .glow-b { width: 400px; height: 400px; background: radial-gradient(circle, rgba(255,60,110,0.07), transparent 65%); bottom: -100px; right: -100px; animation: gb 18s ease-in-out infinite alternate; }
+    @keyframes ga { to { transform: translate(60px, 50px); } }
+    @keyframes gb { to { transform: translate(-40px, -60px); } }
+
+    .wrapper {
+      position: relative; z-index: 1;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 64px 20px 120px;
+    }
+
+    header { text-align: center; margin-bottom: 52px; animation: up .5s ease both; }
+
+    .wordmark {
+      font-size: 13px; font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 4px; color: var(--accent);
+      text-transform: uppercase; margin-bottom: 22px; opacity: 0.8;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 7vw, 4rem);
+      font-weight: 800; letter-spacing: -2px; line-height: 1.05; margin-bottom: 14px;
+    }
+    h1 .hi  { color: var(--accent); }
+    h1 .dim { color: var(--muted); }
+
+    .tagline {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; color: var(--muted); letter-spacing: 1px;
+    }
+    .tagline span { color: rgba(255,255,255,0.2); margin: 0 6px; }
+
+    .tabs {
+      display: flex; gap: 6px;
+      margin-bottom: 12px;
+      animation: up .5s .08s ease both;
+    }
+    .tab {
+      flex: 1; padding: 9px 0;
+      border: 1px solid var(--border); border-radius: 9px;
+      background: var(--surface); color: var(--muted);
+      font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: all .18s;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .tab svg { width: 14px; height: 14px; fill: currentColor; flex-shrink: 0; }
+    .tab:hover { border-color: var(--border-hover); color: var(--text); }
+    .tab.active[data-p="tiktok"]    { border-color: var(--accent);  color: var(--accent);  background: var(--accent-dim); }
+    .tab.active[data-p="instagram"] { border-color: var(--accent2); color: var(--accent2); background: rgba(255,60,110,.07); }
+    .tab.active[data-p="youtube"]   { border-color: var(--accent3); color: var(--accent3); background: rgba(77,140,255,.07); }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px;
+      margin-bottom: 12px; animation: up .5s .12s ease both;
+    }
+
+    .input-row { display: flex; gap: 8px; }
+
+    input[type="url"] {
+      flex: 1; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 9px;
+      padding: 13px 15px; color: var(--text);
+      font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      outline: none; transition: border-color .2s; min-width: 0;
+    }
+    input[type="url"]::placeholder { color: var(--muted); }
+    input[type="url"]:focus { border-color: var(--accent); }
+
+    .btn {
+      padding: 13px 22px; background: var(--accent); color: #040c08;
+      border: none; border-radius: 9px;
+      font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 800;
+      cursor: pointer; white-space: nowrap; transition: all .18s;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .btn:hover:not(:disabled) { background: #00ffb3; transform: translateY(-1px); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+    .btn .spinner {
+      display: none; width: 14px; height: 14px;
+      border: 2px solid rgba(0,0,0,.25); border-top-color: #040c08;
+      border-radius: 50%; animation: spin .55s linear infinite;
+    }
+    .btn.loading .lbl { display: none; }
+    .btn.loading .spinner { display: block; }
+
+    .err {
+      display: none; margin-top: 10px;
+      padding: 10px 14px;
+      background: rgba(255,60,110,.07);
+      border: 1px solid rgba(255,60,110,.2);
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent2);
+    }
+    .err.show { display: block; }
+
+    #result {
+      display: none; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 18px; animation: up .35s ease both;
+    }
+    #result.show { display: block; }
+
+    .res-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    #thumb {
+      width: 68px; height: 68px; object-fit: cover;
+      border-radius: 8px; border: 1px solid var(--border);
+      display: none; flex-shrink: 0;
+    }
+    #thumb.show { display: block; }
+    .res-meta h3 { font-size: 14px; font-weight: 700; margin-bottom: 3px; line-height: 1.3; }
+    .res-meta p  { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); }
+
+    .dl-list { display: flex; flex-direction: column; gap: 7px; }
+    .dl-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 14px; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 9px;
+      text-decoration: none; color: var(--text);
+      font-size: 13px; font-weight: 700; transition: all .18s;
+    }
+    .dl-item:hover { border-color: var(--accent); color: var(--accent); }
+    .dl-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); }
+    .dl-item:hover .dl-meta { color: rgba(0,229,160,.6); }
+
+    .steps {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 10px;
+      margin-top: 44px; animation: up .5s .22s ease both;
+    }
+    .step {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 14px; text-align: center;
+    }
+    .step-n { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 3px; margin-bottom: 10px; }
+    .step-e { font-size: 26px; margin-bottom: 8px; }
+    .step h4 { font-size: 12px; font-weight: 700; margin-bottom: 5px; }
+    .step p  { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); line-height: 1.6; }
+
+    footer {
+      text-align: center; margin-top: 52px;
+      font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted);
+      animation: up .5s .3s ease both;
+    }
+    footer a { color: var(--muted); text-decoration: underline; }
+
+    @keyframes up   { from { opacity:0; transform: translateY(18px); } to { opacity:1; transform: none; } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 500px) {
+      .input-row { flex-direction: column; }
+      .steps { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="glow glow-a"></div>
+<div class="glow glow-b"></div>
+
+<div class="wrapper">
+
+  <header>
+    <div class="wordmark">VidDrop</div>
+    <h1>Télécharge<br><span class="hi">sans</span> <span class="dim">filigrane</span></h1>
+    <p class="tagline">TikTok <span>/</span> Instagram <span>/</span> YouTube</p>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-p="tiktok">
+      <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.89a8.2 8.2 0 004.79 1.54V7c-.01 0-1.5-.01-3.02-.31z"/></svg>
+      TikTok
+    </button>
+    <button class="tab" data-p="instagram">
+      <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+      Instagram
+    </button>
+    <button class="tab" data-p="youtube">
+      <svg viewBox="0 0 24 24"><path d="M23.495 6.205a3.007 3.007 0 00-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 00.527 6.205a31.247 31.247 0 00-.522 5.805 31.247 31.247 0 00.522 5.783 3.007 3.007 0 002.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 002.088-2.088 31.247 31.247 0 00.5-5.783 31.247 31.247 0 00-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>
+      YouTube
+    </button>
+  </div>
+
+  <div class="card">
+    <div class="input-row">
+      <input type="url" id="urlInput" placeholder="Colle le lien ici…" autocomplete="off" />
+      <button class="btn" id="dlBtn">
+        <span class="lbl">↓ Télécharger</span>
+        <div class="spinner"></div>
+      </button>
+    </div>
+    <div class="err" id="errMsg"></div>
+  </div>
+
+  <div id="result">
+    <div class="res-head">
+      <img id="thumb" alt="" />
+      <div class="res-meta">
+        <h3 id="resTitle">Vidéo prête</h3>
+        <p id="resAuthor"></p>
+      </div>
+    </div>
+    <div class="dl-list" id="dlList"></div>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">01</div>
+      <div class="step-e">🔗</div>
+      <h4>Copie le lien</h4>
+      <p>Depuis l'app ou le navigateur</p>
+    </div>
+    <div class="step">
+      <div class="step-n">02</div>
+      <div class="step-e">⚡</div>
+      <h4>Un clic</h4>
+      <p>Analyse instantanée</p>
+    </div>
+    <div class="step">
+      <div class="step-n">03</div>
+      <div class="step-e">📥</div>
+      <h4>Télécharge</h4>
+      <p>HD, sans filigrane</p>
+    </div>
+  </div>
+
+  <footer>
+    VidDrop · usage personnel · propulsé par <a href="https://cobalt.tools" target="_blank">cobalt.tools</a>
+  </footer>
+
+</div>
+
+<script>
+  document.querySelectorAll('.tab').forEach(t => {
+    t.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      hide('result'); hideErr();
+    });
+  });
+
+  document.getElementById('urlInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') go();
+  });
+  document.getElementById('dlBtn').addEventListener('click', go);
+
+  async function go() {
+    const url = document.getElementById('urlInput').value.trim();
+    if (!url) { showErr('Colle un lien d\'abord !'); return; }
+
+    setLoading(true);
+    hide('result'); hideErr();
+
+    try {
+      // Netlify Functions endpoint
+      const res = await fetch('/.netlify/functions/download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || 'Erreur serveur');
+
+      renderResult(data);
+    } catch (err) {
+      showErr(err.message || 'Une erreur est survenue. Réessaie.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function renderResult({ title, thumb, links }) {
+    document.getElementById('resTitle').textContent = title || 'Vidéo trouvée';
+
+    const thumbEl = document.getElementById('thumb');
+    if (thumb) { thumbEl.src = thumb; thumbEl.classList.add('show'); }
+    else { thumbEl.classList.remove('show'); }
+
+    document.getElementById('dlList').innerHTML = links.map(l => `
+      <a class="dl-item" href="${l.url}" target="_blank" rel="noopener">
+        <span>${l.label}</span>
+        <span class="dl-meta">${l.quality} ↗</span>
+      </a>
+    `).join('');
+
+    document.getElementById('result').classList.add('show');
+  }
+
+  function setLoading(on) {
+    const btn = document.getElementById('dlBtn');
+    btn.classList.toggle('loading', on);
+    btn.disabled = on;
+  }
+  function showErr(msg) {
+    const el = document.getElementById('errMsg');
+    el.textContent = '⚠ ' + msg;
+    el.classList.add('show');
+  }
+  function hideErr() { document.getElementById('errMsg').classList.remove('show'); }
+  function hide(id)  { document.getElementById(id).classList.remove('show'); }
+</script>
+</body>
+</html>
