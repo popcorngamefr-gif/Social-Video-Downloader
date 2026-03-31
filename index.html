@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>VidDrop</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -17,7 +17,7 @@
     body[data-p="youtube"]   { --accent: #4d8cff; --adim: rgba(77,140,255,.1); }
     body[data-p="facebook"]  { --accent: #4d8cff; --adim: rgba(77,140,255,.1); }
     body[data-p="twitter"]   { --accent: #9ac7ff; --adim: rgba(154,199,255,.1); }
-    body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-x: hidden; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', 'Syne', sans-serif; min-height: 100vh; overflow-x: hidden; letter-spacing:.01em; }
     body::after {
       content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 999; opacity: .03;
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
@@ -30,9 +30,10 @@
     .wrap { position:relative;z-index:1;max-width:680px;margin:0 auto;padding:64px 20px 120px; }
     header { text-align:center;margin-bottom:52px;animation:up .5s ease both; }
     .wm { font-size:13px;font-family:'JetBrains Mono',monospace;letter-spacing:4px;color:var(--accent);text-transform:uppercase;margin-bottom:22px;opacity:.8; }
-    h1 { font-size:clamp(2.4rem,7vw,4rem);font-weight:800;letter-spacing:-2px;line-height:1.05;margin-bottom:14px; }
+    h1 { font-family:'Syne',sans-serif;font-size:clamp(2.5rem,7vw,4.25rem);font-weight:800;letter-spacing:-2px;line-height:1.02;margin-bottom:14px;text-wrap:balance; }
+    h1 .hero { display:inline-block;background:linear-gradient(100deg,#f7fbff 0%,#c8d7ff 43%,#8dc2ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 26px rgba(77,140,255,.22); }
     h1 .hi { color:var(--accent); } h1 .dim { color:var(--muted); }
-    .tag { font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:1px; }
+    .tag { font-family:'JetBrains Mono',monospace;font-size:12px;color:color-mix(in srgb, var(--muted) 72%, #d4d9e8);letter-spacing:1px; }
     .tag span { color:rgba(255,255,255,.2);margin:0 6px; }
     .pbadge { display:inline-flex;align-items:center;gap:7px;margin-bottom:12px;padding:8px 12px;border-radius:999px;background:var(--adim);border:1px solid color-mix(in srgb, var(--accent) 35%, transparent);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent); }
     .card { background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px;animation:up .5s .12s ease both; }
@@ -78,7 +79,7 @@
 <div class="wrap">
   <header>
     <div class="wm">VidDrop</div>
-    <h1>Télécharge<br><span class="hi">sans</span> <span class="dim">filigrane</span></h1>
+    <h1><span class="hero">Télécharge</span><br><span class="hi">sans</span> <span class="dim">filigrane</span></h1>
     <p class="tag">TikTok <span>/</span> Instagram <span>/</span> YouTube <span>/</span> Facebook <span>/</span> X</p>
   </header>
   <div class="pbadge" id="pbadge">⚡ Détection automatique de la plateforme</div>
