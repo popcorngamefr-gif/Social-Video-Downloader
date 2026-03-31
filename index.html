@@ -13,6 +13,10 @@
       --bh: rgba(255,255,255,0.14); --accent: #00e5a0; --adim: rgba(0,229,160,0.08);
       --a2: #ff3c6e; --a3: #4d8cff; --text: #dde1ea; --muted: #4a5060; --r: 14px;
     }
+    body[data-p="instagram"] { --accent: #ff3c6e; --adim: rgba(255,60,110,.09); }
+    body[data-p="youtube"]   { --accent: #4d8cff; --adim: rgba(77,140,255,.1); }
+    body[data-p="facebook"]  { --accent: #4d8cff; --adim: rgba(77,140,255,.1); }
+    body[data-p="twitter"]   { --accent: #9ac7ff; --adim: rgba(154,199,255,.1); }
     body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-x: hidden; }
     body::after {
       content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 999; opacity: .03;
@@ -30,13 +34,7 @@
     h1 .hi { color:var(--accent); } h1 .dim { color:var(--muted); }
     .tag { font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);letter-spacing:1px; }
     .tag span { color:rgba(255,255,255,.2);margin:0 6px; }
-    .tabs { display:flex;gap:6px;margin-bottom:12px;animation:up .5s .08s ease both; }
-    .tab { flex:1;padding:9px 0;border:1px solid var(--border);border-radius:9px;background:var(--surface);color:var(--muted);font-family:'Syne',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:6px; }
-    .tab svg { width:14px;height:14px;fill:currentColor;flex-shrink:0; }
-    .tab:hover { border-color:var(--bh);color:var(--text); }
-    .tab.active[data-p="tiktok"]    { border-color:var(--accent);color:var(--accent);background:var(--adim); }
-    .tab.active[data-p="instagram"] { border-color:var(--a2);color:var(--a2);background:rgba(255,60,110,.07); }
-    .tab.active[data-p="youtube"]   { border-color:var(--a3);color:var(--a3);background:rgba(77,140,255,.07); }
+    .pbadge { display:inline-flex;align-items:center;gap:7px;margin-bottom:12px;padding:8px 12px;border-radius:999px;background:var(--adim);border:1px solid color-mix(in srgb, var(--accent) 35%, transparent);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent); }
     .card { background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px;animation:up .5s .12s ease both; }
     .irow { display:flex;gap:8px; }
     input[type="url"] { flex:1;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:13px 15px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;outline:none;transition:border-color .2s;min-width:0; }
@@ -83,20 +81,7 @@
     <h1>Télécharge<br><span class="hi">sans</span> <span class="dim">filigrane</span></h1>
     <p class="tag">TikTok <span>/</span> Instagram <span>/</span> YouTube <span>/</span> Facebook <span>/</span> X</p>
   </header>
-  <div class="tabs">
-    <button class="tab active" data-p="tiktok">
-      <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.32 6.32 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.89a8.2 8.2 0 004.79 1.54V7c-.01 0-1.5-.01-3.02-.31z"/></svg>
-      TikTok
-    </button>
-    <button class="tab" data-p="instagram">
-      <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-      Instagram
-    </button>
-    <button class="tab" data-p="youtube">
-      <svg viewBox="0 0 24 24"><path d="M23.495 6.205a3.007 3.007 0 00-2.088-2.088c-1.87-.501-9.396-.501-9.396-.501s-7.507-.01-9.396.501A3.007 3.007 0 00.527 6.205a31.247 31.247 0 00-.522 5.805 31.247 31.247 0 00.522 5.783 3.007 3.007 0 002.088 2.088c1.868.502 9.396.502 9.396.502s7.506 0 9.396-.502a3.007 3.007 0 002.088-2.088 31.247 31.247 0 00.5-5.783 31.247 31.247 0 00-.5-5.805zM9.609 15.601V8.408l6.264 3.602z"/></svg>
-      YouTube
-    </button>
-  </div>
+  <div class="pbadge" id="pbadge">⚡ Détection automatique de la plateforme</div>
   <div class="card">
     <div class="irow">
       <input type="url" id="url" placeholder="Colle le lien ici…" autocomplete="off" />
@@ -122,6 +107,14 @@
   <footer>VidDrop · usage personnel uniquement</footer>
 </div>
 <script>
+  const PLATFORM_LABELS = {
+    tiktok: 'TikTok',
+    instagram: 'Instagram',
+    youtube: 'YouTube',
+    facebook: 'Facebook',
+    twitter: 'X / Twitter'
+  };
+
   function detect(url) {
     if (url.includes('tiktok.com') || url.includes('vm.tiktok')) return 'tiktok';
     if (url.includes('instagram.com')) return 'instagram';
@@ -131,16 +124,32 @@
     return null;
   }
 
+  function applyPlatform(platform) {
+    if (platform) {
+      document.body.dataset.p = platform;
+      document.getElementById('pbadge').textContent = `✓ Plateforme détectée : ${PLATFORM_LABELS[platform]}`;
+      return;
+    }
+    document.body.dataset.p = 'tiktok';
+    document.getElementById('pbadge').textContent = '⚡ Détection automatique de la plateforme';
+  }
+
+  async function parseJsonSafe(res) {
+    const text = await res.text();
+    try {
+      return text ? JSON.parse(text) : {};
+    } catch {
+      if (!res.ok) throw new Error(`Le service a répondu ${res.status}. Vérifie que la fonction Netlify est bien déployée.`);
+      throw new Error('Réponse invalide du serveur.');
+    }
+  }
+
   async function go() {
     const url = document.getElementById('url').value.trim();
     if (!url) { showErr('Colle un lien d\'abord !'); return; }
     const plat = detect(url);
     if (!plat) { showErr('Lien non reconnu. TikTok, Instagram, YouTube, Facebook ou X/Twitter uniquement.'); return; }
-    const tab = document.querySelector(`.tab[data-p="${plat}"]`);
-    if (tab) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-    }
+    applyPlatform(plat);
     load(true); off('res'); hideErr();
     try {
       const res = await fetch('/.netlify/functions/download', {
@@ -148,7 +157,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
       });
-      const data = await res.json();
+      const data = await parseJsonSafe(res);
       if (!res.ok || data.error) throw new Error(data.error || 'Erreur serveur');
       render(data);
     } catch(e) {
@@ -176,12 +185,10 @@
 
   document.getElementById('btn').addEventListener('click', go);
   document.getElementById('url').addEventListener('keydown', e => { if(e.key==='Enter') go(); });
-  document.querySelectorAll('.tab').forEach(t => {
-    t.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
-      t.classList.add('active'); off('res'); hideErr();
-    });
+  document.getElementById('url').addEventListener('input', e => {
+    applyPlatform(detect(e.target.value.trim().toLowerCase()));
   });
+  applyPlatform(null);
 </script>
 </body>
 </html>
